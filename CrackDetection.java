@@ -129,7 +129,7 @@ public class CrackDetection implements Runnable {
 						 //try 24 Apr. FileOutputStream stream = new FileOutputStream(outputFileName);
 						
 						//17 Apr. 2014 worked OK OutputStreamWriter out = new OutputStreamWriter(stream, "US-ASCII");
-						//OK worked 24 Apr. 2014 out = new OutputStreamWriter(stream, "US-ASCII");
+						//OK  worked 24 Apr. 2014 out = new OutputStreamWriter(stream, "US-ASCII");
 						//OK worked 24 Apr. out = new OutputStreamWriter(stream, "binary");
 						
 						 //test 19 May out = new FileOutputStream(outputFileName);
