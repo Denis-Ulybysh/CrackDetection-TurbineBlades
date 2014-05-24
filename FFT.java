@@ -1,6 +1,6 @@
 import java.util.Date;
 
-/**The static method transform performs a real to complex Fourier transform using a 
+/**The static method transform performs a real to complex Fourier transform using a  
  * complex-to-complex FFT algorithm.  It is crippled in the sense that it is not being used to its
 full potential as a complex-to-complex forward or inverse FFT algorithm.
 
