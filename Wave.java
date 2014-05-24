@@ -6,7 +6,7 @@ class Wave {
 
     byte [] _wave;              /*whole byte content of input audio WAV file */
     double [] [] _samples;   /*array will contain double values of amplitude read from WAV, .i.e. what we need*/
-    // 20 May double [] _samples2;   /*array will contain double values of amplitude read from WAV, .i.e. what we need*/
+    // 20 May double [] _samples2;   /*array will contain double values of amplitude read from WAV,  .i.e. what we need*/
     
     int  i_numofChannels = 2;  			//number of channels, obtained from WAV-file 
     long l_SamplingRate = 44100;
