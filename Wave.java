@@ -6,18 +6,19 @@ class Wave {
 
     byte [] _wave;              /*whole byte content of input audio WAV file */
     double [] [] _samples;   /*array will contain double values of amplitude read from WAV, .i.e. what we need*/
+    // 20 May double [] _samples2;   /*array will contain double values of amplitude read from WAV, .i.e. what we need*/
     
-    int  i_numofChannels = 2;  //number of channels, obtained from WAV-file 
+    int  i_numofChannels = 2;  			//number of channels, obtained from WAV-file 
     long l_SamplingRate = 44100;
-    int iBitsperSample = 16;
+    int iBitsperSample = 16;				//1 audio value is encoded in iBitsperSample  bits
     
     long nSamples = 0;   //number of lines in data section of wav-file, i.e. number of samples in 1 channel
 
+    
     public double [] samples(short channel) {
-	return _samples[channel] ;
+    	return _samples[channel] ;
     }
     
-
     public Wave() {
     }
 
@@ -28,7 +29,6 @@ class Wave {
 	int fileSize = _wave.length;
 	System.out.println("size="+fileSize);
 
-	// Print chunk id
 	System.out.println("ChunkID="+_wave[0]+": "+ _wave[1]+": "+_wave[2]+": \n"+_wave[3]);
 	System.out.println("WAVE=%d"+_wave[8]+": %d"+ _wave[9]+": %d"+_wave[10]+":%d\n" + _wave[11]);
 	
@@ -49,7 +49,13 @@ class Wave {
 
 	
 	System.out.println("Audio format=%d \r\n" +  (_wave[20]+(_wave[21]<<8)) );
-
+	//uld 2014_04_15  System.out.printf does not work on Fiji
+	/*
+	System.out.printf("Channels=%d \r\n", _wave[22]+(_wave[23]<<8));
+	System.out.println("SampleRate=%d \r\n", l_SamplingRate );
+	System.out.println("BitsPerSample=%d \r\n", _wave[34]+(_wave[35]<<8));
+   */
+	
 	long nBytesInData = 
 	    (0xFF&(long)_wave[40])+
 	    ((0xFF&(long)_wave[41])<<8)+
@@ -58,9 +64,9 @@ class Wave {
 	// uld  System.out.printf("Number of Bytes In Data = %d \r\n", nBytesInData);
 	System.out.println("Number of Bytes In Data = %d \r\n" + nBytesInData);
 
+	// We use Stereo mode cause we need to capture sound from 2 blades simultaneously 
    //  Each sample (i.e. each line)  takes 4 bytes. 2 bytes per each channel. 
-	// We will work with both channels, each channel represents separate blade. 
-	// I.e. every 4 bytes in each line will make 2 samples of type double
+	// We will work with both channels. Every 4 bytes in each line will make 2 samples of type double
 	// In case of 1 channel it would be: long nSamples = nBytesInData/2; 
 	// OK worked 15 Apr.2014  long nSamples = nBytesInData/4;
 	nSamples = nBytesInData/ (2*i_numofChannels) ;
@@ -73,8 +79,7 @@ class Wave {
 	// Create _samples array
 	_samples = new double [2] [(int) nSamples];
 	
-	
-	
+		
 	try {
 	    for (i=0; i < nSamples; i++) {
 		//System.out.println("i="+i);
@@ -106,16 +111,7 @@ class Wave {
     
     void writeSamples_toFile(int channel) {
     	
-    	/*
-    	double [] []  samples;
-		
-		if ( channel == 1) {
-			samples = _samples1;
-		}
-		else {
-			samples = _samples2;
-		}  */
-		
+    		
 		int len = _samples[0].length;
 	
 		// Write samples
