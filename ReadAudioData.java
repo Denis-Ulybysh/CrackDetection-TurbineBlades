@@ -4,7 +4,7 @@
 /**
  * @author Denis Ulybyshev
  *
- * Actuator produces input sound signal with frequency 4 kHz  or other (probing frequency).
+ * Actuator produces input sound signal with frequency 4 kHz  or other (probing frequency). 
  * I.e. it can be other frequency as well, e.g. 6 kHz, 7kHz etc. 
  * Output audio signal is captured in WAV - file, which should be converted to DAT-file afterwards 
  * (e.g. by using "sox" utility: $ sox input_file.wav output_file.dat). 
