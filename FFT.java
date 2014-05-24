@@ -45,6 +45,7 @@ public class FFT implements Runnable {
 	private static boolean b_t2Ready = false;
 	
 	boolean b_res = false;
+	final  static Object flock = new Object();
 	
 	//uld 26 Mar. No need to make constructor synchronized cause it only be called from one place, i.e. 
 	//from thread ReadAudioData  
@@ -113,21 +114,24 @@ public class FFT implements Runnable {
 		while (true) 
 		{
 			System.out.println("[FFT] Thread is awaken ");
+			set_t2_Ready (false);
 			
-					  
 					if (b_InputDataset_Ready() ) 
 					{
 					
 						System.out.println("[FFT] Number of data points: " + ReadAudioData.ui_numofdatapoints);
 			
-						//test 19 May synchronized (CrackDetection.flock )   {
-							
+						
 						    //The complexToComplex FFT method does an in-place transform causing the output
 						    // complex data to be stored in the arrays containing the input complex data.
 						    // Therefore, it is necessary to copy the input data to this method into the real
 						    // part of the complex data passed to the complexToComplex method.
 						    //i.e. we copy data to realOut  
 					    	
+						//test 23 May 
+						//23 May t3 synchro doesnot work synchronized (flock )  
+						//23 May t3 synchro doesnot work {
+							
 						   if ( ReadAudioData.ui_numofdatapoints >= iDatalength)
 						   {
 							   System.arraycopy(ReadAudioData.data1[0],0, realOut[0],0,iDatalength);  //may be change it to for-cycle to copy
@@ -140,10 +144,6 @@ public class FFT implements Runnable {
 							   complexToComplex(1,iDatalength,realOut[1],imagOut[1]);
 							   
 							   System.out.println("[FFT] FFT is done ");
-					    //Compute the magnitude and the phase angle
-					    // in degrees.
-					    //Resolution step = 44100 Hz / dataLen = e.g. 44100 / 65536
-					 
 						   }
 						   else
 						   {
@@ -152,19 +152,34 @@ public class FFT implements Runnable {
 					                   " \n is less than required  " + iDatalength +
 					                   ". \n FFT results can be untrusted and can spoil history. " + 
 					                   "\n Thus FFT will not be applied and result will not be saved in history");
-						   }
-						//test 19 May } // from synchronized (flock) 
-				    
+						   } //from if
+						   
+						   //24 May give the opportunity to CrackDetection thread to reach flock.wait()
+						   /* 23 May t3 synchro doesnot work
+						   try 
+						   {
+								Thread.sleep(500);
+							   } catch (InterruptedException e)
+							   {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						   
+						   set_t2_Ready (true);
+						   flock.notifyAll();
+						   //23 May set_t2_Ready (false);	   
+						} // from synchronized (flock)  */
+						   //23 May t3 synchro doesnot work
+						   
+												
 					}  //from if (b_InputDataset_Ready() )
 					
-				    set_t2_Ready (true);
+				    
 				    /// OK worked 23 Apr. this.notifyAll();   //but if I don't use wait() this line is not necessary 
 				    //OK worked 13 may without lock object  this.notifyAll();
-				    //test 19 May CrackDetection.flock.notifyAll();
+				    //23 May CrackDetection.flock.notifyAll();
 				    
-				    set_t2_Ready (false);
-				    
-			 		System.out.println ( " [FFT.run ()] end of FFT.run() method, next iteration  will proceed now...");
+				    System.out.println ( " [FFT.run ()] end of FFT.run() method, next iteration  will proceed now...");
 			 		 
 			// test 19 May } // from synchronized (CrackDetection.flock)
 	
