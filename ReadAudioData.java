@@ -39,6 +39,9 @@ When feeding new input audio data file change 3 things:
 	//1 step in Sungmin data        = 96000 / 262144 = 0.3662109375   Hz
  //   1 step in Sungmin's data     = 96000 / 524288 =  0.18310546875
 
+    //6) With new Sungmin's data (23 Oct): sampling frequency is 96kHz 
+
+
 
 import java.io.File;
 
@@ -56,53 +59,26 @@ public class ReadAudioData implements Runnable {
 	 //added 10 Apr. 12:10 am  to check memory leakage 
 	/// Worked OK on laptop 10 Apr.2014   static ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();	
 	/// uld 25 Mar.2014  final double pi = Math.PI;  
-
-	  //Begin default parameters
-	  //OK release int len = 65536;		//input (and output) data length
-	//OK release 3 sec int len = 131072;		//input (and output) data length
-	
-	//OK 05 Nov. int len = 262144;		//input (and output) data length
-	//OK 06 Nov. int len = 1048576;
-	
-	//OK Release samplingrate=96 kHz   
-	//int len = 2097152;
 	
 	//21 sec for sampling rate 48 kHz, cause 1048576 / 48 000 = 21.8 sec
 	///25 Mar.2014: within 1 sec sound card receives 48000 audio measures (points)
-	int len = 1048576;		    //2^20 points
-	
-	//test 31 Oct. int len = 4;		//input (and output) data length
 
-	  //release final int MAX_NUMBER_OF_INPUT_POINTS = 262144; 
-	  //OK 05 Nov. final int MAX_NUMBER_OF_INPUT_POINTS = 262144;
-	  
-	//sampling rate 48 kHz
-	  //OK 11 Apr.-works too slowly in getData() :  final int MAX_NUMBER_OF_INPUT_POINTS =  1048576;		 
+	//sampling rate 44.1 kHz
 	  final static int MAX_NUMBER_OF_INPUT_POINTS =  1048576;
 	  ///11 Apr. final int MAX_NUMBER_OF_INPUT_POINTS =  1048576/32; - works fast on Android Pi
 	  
 	  //OK release sampling rate 96kHz 
 	  //final int MAX_NUMBER_OF_INPUT_POINTS =  2097152;
-
-	  
-	//OK Release int ui_numofdatapoints = 65536; //number of input points, which m.b. power of 2
-	//OK release 32 sec int ui_numofdatapoints = 131072; //number of input points, which m.b. power of 2
-	
-	//OK 05 Nov. int ui_numofdatapoints = 262144; //number of input points, which m.b. power of 2. Here it is 2^18, i.e. 6 sec
-	//OK 06 Nov. int ui_numofdatapoints = 1048576;
 	
 	//OK Release Sungmin's data samplingrate-96 kHz  
 	//int ui_numofdatapoints = 2097152;
 	
 	//for samplingrate = 48 kHz -= Scott's data
-	public static int ui_numofdatapoints = MAX_NUMBER_OF_INPUT_POINTS;  //on Pi I tried /8, 11 Apr.2014		
+
+	  public static int ui_numofdatapoints = MAX_NUMBER_OF_INPUT_POINTS;  //on Pi I tried /8, 11 Apr.2014		
 	
 	//test int ui_numofdatapoints = 4; //number of input points, which m.b. power of 2. Here it is 2^18, i.e. 6 sec
-	  //uld OK it works int ui_numofdatapoints = 64; //number of input points, which m.b. power of 2
 
-	 //
-	 String [] sensordata = new String[MAX_NUMBER_OF_INPUT_POINTS+1];
-	  
 	  //Array data1 contains input sound data which will be read from input DAT-file
 	  // It will be the input for FFT 
 	  static double[] [] data1 = new double[2] [MAX_NUMBER_OF_INPUT_POINTS];  
@@ -118,15 +94,16 @@ public class ReadAudioData implements Runnable {
 	  //11 Apr: not required anymore  double[] magnitude1 = new double[ui_numofdatapoints];
 	 //10 Apr.  magnitude1 = new double[ui_numofdatapoints];
 	  
-	  //uld Mar. 2014 public ReadAudioData(){
-	  ///uld Mar.2014 we will use threads, so creating an instance of the class and calling the constructor 
-	  ///uld Mar. 2014 is not necessary
 
 	  private static boolean b_t1Ready = false;
      //OK 16.04.2014  String inputFileName = "B3_6000.wav";
 	 //OK 16.04.2014: cmpared with old results from Crack_Detect_2013_11_05 and they are same. Very good 
 	 // String inputFileName = "B3_7623_1.wav";
-	  String inputFileName = "dat-7000.wav";
+	  String inputFileName = "dat-8000-stereo.wav";
+	  Wave w = new Wave();
+	
+	   private int j = 0;
+	   private int i = 0;
 	
 	  public void run() {
 
@@ -145,15 +122,8 @@ public class ReadAudioData implements Runnable {
 		//		10 Apr. 2014  angle = new double[ui_numofdatapoints];
 				 
 			  this.set_t1_Ready(false);   //indicator that thread 1 ReadAudioData is not done yet
-			    //OK release 3 sec if(new File("BadBlade_131072_OK_001.dat").exists()){
-				//OK Scott's data 
 		
-				  //if(new File("B3_3213_1.dat").exists()){
-				  // uld OK worked ! if(new File("B3_7623_1.dat").exists()){
 			  if(new File(inputFileName).exists()){
-					  
-			    //OK Release if (new File("BadBlade_65536_OK_001.dat").exists() ) {
-			    //uld OK it works if(new File("test.txt").exists()){
 				  
 				   //added to test lock seize-release without while (!ReadAudioData.get_t1_Ready() )
 				   try {
@@ -166,23 +136,13 @@ public class ReadAudioData implements Runnable {
 				   // */
 			  
 				   getData(inputFileName);   
-							   //10 Apr. thread 2 will be feed with actual data1 input dataset
-							   	// OK worked 22 Apr.		    Thread t2 = new Thread(new ForwardRealToComplexFFT(data1));
-							   	// OK worked 22 Apr.			 t2.start();	
-								 
-				     /// uld Mar. 2014 (new Thread(new ForwardRealToComplexFFT())).start();
-				    ///to pass arguments to the thread we need constructor with parameters
-		            /// 09 Apr.2014: we create thread 2 here (not later after else {} cause thread 2 needs to be created
-			        ///only if input dataset exists. Otherwise it will be created and will wait forever cause 
-			        /// set_t1_Ready (true); will never be called cause getData(0 will never be called, thus 
-			        ///wait() in ForwardRealToComplex() will wait forever
-				   /// to fix it - kill threads 2,3,4 if input file does not exist
-				    
+					
 			      }//end if
 				  else
 				  {
 					  System.out.print("[ReadAudioData] ERROR: input file not found " );
-					  // 14 May 2014: destroy threads 2,3,4 here !!! 
+					  // 14 May 2014: destroy threads 2,3,4 here !!!
+					  ///  kill threads 2,3,4 if input file does not exist
 				  }
 				  
 				  //Print length of input dataset 
@@ -232,11 +192,9 @@ public class ReadAudioData implements Runnable {
 	  //This method reads input DAT-file with sound data and stores values in data1 array 
 	  // OK worked 13 May 2014 synchronized void getData(String filename ) {
 	  void getData(String filename  ) {
-	      int cnt = 0;
 	   
 		  synchronized (FFT.rlock ) 
 		  { 
-				    Wave w = new Wave();
 					w.readFile(filename);
 					
 					System.out.println("[getData] Number of audio data samples from 1 channel of WAV-file (from microphone): " + w.nSamples);
@@ -266,20 +224,25 @@ public class ReadAudioData implements Runnable {
 						
 					}
 					
-									    
-				    for (int i=0; i<cnt; i+=300000)
-				    {
-				    		System.out.println( "\r\n i =  " + i);
-				    		System.out.print("  ;   data1[0] [i]=" + data1 [0] [i]);
-				    }
-				    
-				    set_t1_Ready (true);
+					for (j = 0; j<2 ; j++)
+					{
+					    for (i=0; i<MAX_NUMBER_OF_INPUT_POINTS; i+=300000)
+					    {
+					    		System.out.println( "\r\n i =  " + i + "j = " + j);
+					    		System.out.print("  ;   data1[j] [i]=" + data1 [j] [i]);
+					    }
+					    
+					}
+					
+					set_t1_Ready (true);
 				    /// OK worked 23 Apr. this.notifyAll();   //but if I don't use wait() this line is not necessary 
 				    //OK worked 13 may without lock object  this.notifyAll();
 				    FFT.rlock.notifyAll();
-				    
+				   
 			 		System.out.println ( " [getData] end of getData method, method run() of ReadAudioData  thread "
 				   			                  + " will be proceeded now ...");
+			 		
+			 		//may be call w.close to clean memory and remove w's descriptors to prevent memory leak?
 		  } //end of synchronized (lock)
 	}//end getData
 	  //-------------------------------------------//
@@ -292,16 +255,44 @@ public class ReadAudioData implements Runnable {
 	  b_t1Ready = b;
   }
 	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		//this.ReadAudioData();
+		
+		/// 09 Apr.2014  ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
 
+		/// worked OK on laptop 10 Apr.2014  Runnable r = new ReadAudioData();
+        //OK 09 Apr.2014 worked, then moved to global variables  ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+		//OK 9 Apr. 2014-was working 1 hour:  ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		
+		/// worked OK on laptop 10 Apr.2014    service.scheduleAtFixedRate(r, 0, 30, TimeUnit.SECONDS);
+		
+      //09 Apr.2014  If r is a Runnable object, and e is an Executor object you can replace
+      // (new Thread(r)).start();    with       e.execute(r);
+        //see Executor Interfaces (The Java™ Tutorials ) Essential Classes ) Concurrency).htm
+        /// 10 Apr. service.shutdown(); 
+        //shutdown just terminates app immediately 
+		/// worked OK on laptop 10 Apr.2014   System.out.println("[ReadAudioData main] service.isterminated() returns: " + service.isTerminated() );
+        
+		//causes NoClassDefFoundError (new RealtimeThread(new ReadAudioData())).start();    //uld  it should be run by scheduler, not just by calling start
+		// worked OK 28 Apr. (new Thread(new ReadAudioData())).start();    //uld  it should be run by scheduler, not just by calling start
 		(new Thread(new ReadAudioData())).start();
 		 
-	   //10 Apr.2014: start thread 4 which will clean old data from SD card 
-		 (new Thread(new CleaningThread())).start();
+	        //OK 09 Apr.2014 worked ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+			//OK 9 Apr. 2014-was working 1 hour:  ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		 // 
+		//OK worked 10 Apr. Runnable r = new ReadAudioData();
+		//OK worked 10 Apr.  service.scheduleAtFixedRate(r, 0, 30, TimeUnit.SECONDS);
+        
+	        //10 Apr.2014: start thread 4 which will clean old data from SD card 
+		(new Thread(new CleaningThread())).start();
 		
 		 (new Thread(new FFT())).start();
 		 (new Thread(new CrackDetection())).start();
-
-	    
+	
+	        
+//09 Apr.2014		 ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+//09.04.2014	     service.scheduleAtFixedRate(ReadAudioData, 0, 30, TimeUnit.SECONDS);
+	        
 	}  //end of main(...)
 
 } //class ReadAudioData
