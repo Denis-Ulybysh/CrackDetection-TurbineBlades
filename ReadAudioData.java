@@ -7,7 +7,7 @@
  * Actuator produces input sound signal with frequency 4 kHz  or other (probing frequency).
  * I.e. it can be other frequency as well, e.g. 6 kHz, 7kHz etc. 
  * Output audio signal is captured in WAV - file, which should be converted to DAT-file afterwards 
- * (e.g. by using "sox" utility: $ sox input_file.wav output_file.dat). 
+ * (e.g. by using "sox" utility: $ sox input_file.wav output_file.dat).  
  * Then FFT  is applied to input DAT file "BadBlade_65536_OK_001.dat" (or other name) 
  * to compute  the magnitude of the spectral content. The output values of energies (magnitudes) are
  * written to  specified file, e.g.  "output_B3_7000.dat".
