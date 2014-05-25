@@ -4,7 +4,7 @@
 /**
  * @author Denis Ulybyshev
  *
- * Actuator produces input sound signal with frequency 4 kHz  or other (probing frequency). 
+ * Actuator produces input sound signal with frequency 4 kHz  or other (probing frequency).
  * I.e. it can be other frequency as well, e.g. 6 kHz, 7kHz etc. 
  * Output audio signal is captured in WAV - file, which should be converted to DAT-file afterwards 
  * (e.g. by using "sox" utility: $ sox input_file.wav output_file.dat). 
@@ -81,7 +81,7 @@ public class ReadAudioData implements Runnable {
 
 	  //Array data1 contains input sound data which will be read from input DAT-file
 	  // It will be the input for FFT 
-	  static double[] [] data1 = new double[2] [MAX_NUMBER_OF_INPUT_POINTS];  
+	 static double[] [] data1 = new double[2] [MAX_NUMBER_OF_INPUT_POINTS];  
 
 	 //Following arrays receive information back
 	  // from the spectral analysis that is not used in this program.
@@ -122,7 +122,7 @@ public class ReadAudioData implements Runnable {
 		//		10 Apr. 2014  angle = new double[ui_numofdatapoints];
 				 
 			  this.set_t1_Ready(false);   //indicator that thread 1 ReadAudioData is not done yet
-		
+			  
 			  if(new File(inputFileName).exists()){
 				  
 				   //added to test lock seize-release without while (!ReadAudioData.get_t1_Ready() )
@@ -163,7 +163,7 @@ public class ReadAudioData implements Runnable {
 				  
 				  try {
 						// OK should be in the release Thread.sleep(1800000);  //30 min = 0.5 hour
-					  Thread.sleep(40000);  //40 sec
+					  Thread.sleep(45000);  //45 sec
 					   } catch (InterruptedException e)
 					   {
 						// TODO Auto-generated catch block
@@ -198,7 +198,7 @@ public class ReadAudioData implements Runnable {
 					w.readFile(filename);
 					
 					System.out.println("[getData] Number of audio data samples from 1 channel of WAV-file (from microphone): " + w.nSamples);
-			
+			 
 					if (w.nSamples >= MAX_NUMBER_OF_INPUT_POINTS )  //WAV-file has more samples than we need in FFT algo
 					{
 						System.arraycopy(w._samples[0], 0, data1[0], 0, MAX_NUMBER_OF_INPUT_POINTS);
@@ -228,10 +228,9 @@ public class ReadAudioData implements Runnable {
 					{
 					    for (i=0; i<MAX_NUMBER_OF_INPUT_POINTS; i+=300000)
 					    {
-					    		System.out.println( "\r\n i =  " + i + "j = " + j);
-					    		System.out.print("  ;   data1[j] [i]=" + data1 [j] [i]);
+					    		System.out.println( "\r\n [ReadAudioData] i =  " + i + "j = " + j);
+					    		System.out.print("  [ReadAudioData]   data1[j] [i]=" + data1 [j] [i]);
 					    }
-					    
 					}
 					
 					set_t1_Ready (true);
@@ -282,12 +281,16 @@ public class ReadAudioData implements Runnable {
 		 // 
 		//OK worked 10 Apr. Runnable r = new ReadAudioData();
 		//OK worked 10 Apr.  service.scheduleAtFixedRate(r, 0, 30, TimeUnit.SECONDS);
-        
+		
+		(new Thread(new FFT())).start();
 	        //10 Apr.2014: start thread 4 which will clean old data from SD card 
 		(new Thread(new CleaningThread())).start();
 		
-		 (new Thread(new FFT())).start();
-		 (new Thread(new CrackDetection())).start();
+		 //24 May (new Thread(new FFT())).start();
+		 
+		 //24 May: don't run this read, merge it with FFT thread cause synchronization between them 
+		 //is working incorrect 
+		 //24 May  (new Thread(new CrackDetection())).start();
 	
 	        
 //09 Apr.2014		 ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
