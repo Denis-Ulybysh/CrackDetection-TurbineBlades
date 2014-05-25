@@ -1,6 +1,6 @@
 import java.util.Date;
 
-/**The static method transform performs a real to complex Fourier transform using a  
+/**The static method transform performs a real to complex Fourier transform using a 
  * complex-to-complex FFT algorithm.  It is crippled in the sense that it is not being used to its
 full potential as a complex-to-complex forward or inverse FFT algorithm.
 
@@ -37,7 +37,7 @@ public class FFT implements Runnable {
 	static double[] [] realOut = new double[2] [iDatalength];
 	// OK tried 16 Apr., worked   double[] imagOut = new double[ReadAudioData.ui_numofdatapoints];
    static double[] [] imagOut = new double [2] [iDatalength];
-
+   
 	double[] angleOut = new double [ReadAudioData.MAX_NUMBER_OF_INPUT_POINTS];
 	   
 	final static Object rlock = new Object();
@@ -46,7 +46,12 @@ public class FFT implements Runnable {
 	
 	boolean b_res = false;
 	final  static Object flock = new Object();
-	
+
+	int p = 0;
+	int q=0;
+	//24 May
+	CrackDetection CrackDetectInstance = new CrackDetection(  );
+			
 	//uld 26 Mar. No need to make constructor synchronized cause it only be called from one place, i.e. 
 	//from thread ReadAudioData  
 	///OK worked 23 Apr. public FFT (double[] data) 
@@ -74,37 +79,15 @@ public class FFT implements Runnable {
 		    {
 	               e.printStackTrace();
 	        }
-		    
-		}
-	    	/*//OK worked 12 May 2014 
-		while (!ReadAudioData.get_t1_Ready()) {
-
-			 ///* OK worked OK without try catch blockk 23 Apr. 
-				try {
-					///		lock.wait();
-					Thread.sleep(100);
-					lock.wait();
-					/// OK worked 23 Apr.  Thread.sleep(10);
-					/// OK worked 23 Apr. Thread.yield();
-							/// 23 Apr. ReadAudioData.this.wait();
-					//FFT.this.wait();
-					System.out	.println("[ForwardRealToComplexFFT] waits...  wait() was called ");
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} //end of catch 
-				///  OK worked OK without try catch blockk 23 Apr.  */
-	    	/*
-			} // end of while  OK worked 13 May 2014  */  
+		}  //end of synchronized(rlock)
 	    
 		b_res=true;
 		System.out	.println("[FFT.b_InputDataset_Ready] b_res =  " + b_res + "  ; end of method");
-		//return b_res;
 		return b_res;
 	}
 	
 	public void run() {
-			
+
 		System.out.println("[FFT] thread has started; run() is called ");
 
 		String str2 = Thread.currentThread().getName(); 
@@ -118,15 +101,14 @@ public class FFT implements Runnable {
 			
 					if (b_InputDataset_Ready() ) 
 					{
-					
 						System.out.println("[FFT] Number of data points: " + ReadAudioData.ui_numofdatapoints);
 			
-						
 						    //The complexToComplex FFT method does an in-place transform causing the output
 						    // complex data to be stored in the arrays containing the input complex data.
 						    // Therefore, it is necessary to copy the input data to this method into the real
 						    // part of the complex data passed to the complexToComplex method.
-						    //i.e. we copy data to realOut  
+						    //i.e. we copy data1 to realOut
+							//It is VERY IMPORTANT to reset imaginary part imagOut[] [] to 0 every iteration of algo
 					    	
 						//test 23 May 
 						//23 May t3 synchro doesnot work synchronized (flock )  
@@ -136,7 +118,14 @@ public class FFT implements Runnable {
 						   {
 							   System.arraycopy(ReadAudioData.data1[0],0, realOut[0],0,iDatalength);  //may be change it to for-cycle to copy
 							   System.arraycopy(ReadAudioData.data1[1],0, realOut[1],0,iDatalength);  //may be change it to for-cycle to copy
-							   //element by element 
+		
+							   //25 May: without this initialization imaginary part imagOut with zeroes algorithm worked buggy
+							   for (q = 0; q < 2; q++)   {
+								   for (p = 0; p < iDatalength; p++ )
+								   {
+									   imagOut[q][p] = 0;
+								   }
+							   }
 					
 							   //Perform the spectral analysis.  The results are stored in realOut and imagOut. 
 							   // The +1 causes it to be a forward transform. A -1 would cause it to be an inverse transform.
@@ -144,6 +133,9 @@ public class FFT implements Runnable {
 							   complexToComplex(1,iDatalength,realOut[1],imagOut[1]);
 							   
 							   System.out.println("[FFT] FFT is done ");
+							   System.out.println("[FFT] iDatalength =  " + iDatalength);
+
+							   CrackDetectInstance.run(); 
 						   }
 						   else
 						   {
