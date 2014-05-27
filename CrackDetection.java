@@ -1,4 +1,3 @@
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,9 +39,17 @@ public class CrackDetection implements Runnable {
 	  // from the spectral analysis process, i.e. what we need 
 	// OK May 22 double[] magnitude;
 	
+	int iData_Length = ReadAudioData.MAX_NUMBER_OF_INPUT_POINTS;   //19 May
+	
 	// OK May 22 double[] aod_angleOut;  //will be filled in method run () {constructor} below
-	double[] [] aod_angleOut;  //will be filled in method run () {constructor} below
- 
+	//26 May double[] [] aod_angleOut;  //will be filled in method run () {constructor} below
+	//OK worked before new algo with blade couples May 22 aod_angleOut = new double[iData_Length];
+	double[] []	aod_angleOut = new double[2] [iData_Length];
+			
+	 //Compute magnitude spectra of the raw input data and save it in output arrays. 
+    //OK May 22 magnitude = new double[iData_Length];
+	double[] [] magnitude = new double[2] [iData_Length];
+
 	///uld OK 17 Apr. 2014: false is normal mode, we don't write to output file 
 	private boolean b_CrackAlarmRaised = false;  
 	 // test 19 May private boolean b_CrackAlarmRaised = true;
@@ -51,9 +58,6 @@ public class CrackDetection implements Runnable {
 	//indicator whether FFT output data analysis raised crack alarm
 
 	 String outputFileName = "output_dat-8000.dat";
-
-	private int iNumOfPointsHighestEnergies = 20;  // how many points with highest energies do we catch
-	                																   //around probing Frequency
 
 	//22 May new variables cause of 2 channels instead of 1
 	double[] dProbingFrequencyFound = new double[2];   // Real probing frequency found
@@ -71,6 +75,13 @@ public class CrackDetection implements Runnable {
 	int[] iRightFreqIndexAreaCalcRight4 = new int [2];		//index for Fprob + w
 	
 	public double[] aodArea = new double[2];
+
+	//26 May: minimum area in the couple of blades
+	private double dMinArea = 0;
+	// Experimental Threshold to distinguish healthy blade from the cracked one 
+	private double dThreshold = 1.5;
+	// Indicator that cracked blade was detected in the couple B1-B2 (or make it just without couple) 
+	private boolean bCrackDetected12 = false;
 
 	//monitor for FFT 
 	// final static Object flock = new Object();  //released flock indicates that FFT is done 
@@ -90,11 +101,7 @@ public class CrackDetection implements Runnable {
 	
 		//energies and frequencies from interval 
 		//[ dProbingFrequencyFound - dProbingFreqSearchInterval  ; dProbingFrequencyFound - dFreqIntervalExcludedAroundProbing]
-	     
-		
-		int iData_Length = ReadAudioData.MAX_NUMBER_OF_INPUT_POINTS;   //19 May
-		//OK May 22 aod_angleOut = new double[iData_Length];
-		aod_angleOut = new double[2] [iData_Length];
+	    
 		  
 		double pi = Math.PI;
 		
@@ -109,34 +116,12 @@ public class CrackDetection implements Runnable {
 		//OK double dProbingFrequency = 6000.0;       // Expected Probing frequency
 	
 		double dProbingFreqSearchInterval = 50.0;
-		double dLeftFreqBorder = dProbingFrequency - dProbingFreqSearchInterval/2 ;
 		
 		double dMaxMagnitudePumping = 0.0;		//Magnitude corresponding to pumping frequency
-		
-		double[] dMaxMagnitudeAroundProbing = new double[iNumOfPointsHighestEnergies];
-		double[] dMaxMagnitudeAroundProbingFreq = new double [iNumOfPointsHighestEnergies];
-		
-		double dProbingMinusPumpingFrequency = 0.0;		//Probing minus Pumping frequency initial
-		double dProbingMinusPumpingFrequencyFound = 0.0;	  //Probing minus Pumping frequency found
-		//Magnitude corresponding to probing minus pumping frequency
-		double dMaxMagnitudeProbingMinusPumping = 0.0;
-		
-		
-		double dProbingPlusPumpingFrequency = 0.0;		//Probing plus Pumping frequency initial
-		double dProbingPlusPumpingFrequencyFound = 0.0;		//Probing plus Pumping frequency found
-		//Magnitude corresponding to probing minus pumping frequency
-		double dMaxMagnitudeProbingPlusPumping = 0.0;
-		
-		int iProbingMinusPumpingFreqIndex = 0;
-		int iProbingPlusPumpingFreqIndex = 0;
 		
 		//17 Apr.2014 
 		//OK worked 24 Apr. OutputStreamWriter out = null;
 		OutputStream out = null;
-		
-		 //Compute magnitude spectra of the raw input data and save it in output arrays. 
-	    //OK May 22 magnitude = new double[iData_Length];
-		double[] [] magnitude = new double[2] [iData_Length];
 		
 		//new variables 22 May 
 	    int k = 0;
@@ -168,6 +153,9 @@ public class CrackDetection implements Runnable {
 			    dProbingFrequencyFound[k] = 0.0;
 			    dMaxMagnitudeProbing[k] = 0.0;
 			}		    			
+	    	
+	    	//In the beginning of algorithm iteration crack indicator is false
+	    	bCrackDetected12 = false;
 
 			/* 23 May t3 synchro doesnot work
 	    	 synchronized(FFT.flock)  	{
@@ -413,6 +401,22 @@ public class CrackDetection implements Runnable {
 				    
 				    //22 May: now I can make a conclusion: 
 				    // if (  (aodArea[0]-aodArea[1])  /  min {aodArea[0],aodArea[1]} ) > Threshold  then Crack!!! 
+				    //26 May: add double dMinArea,  
+				    if  ( aodArea[0] <= aodArea[1])
+				    {
+				    	dMinArea = aodArea[0] ;
+				    }
+				    else 
+				    {
+				    	dMinArea = aodArea[1];
+				    }
+
+			    	 if (  (  Math.abs(aodArea[1] - aodArea[0])  /  dMinArea  ) > dThreshold )
+			    	 {
+					    	bCrackDetected12 = true;
+					    	System.out.println("[CrackDetection] !!! ALARM: CRACK HAS BEEN DETECTED !!!  " );
+			    	 }
+				    
 				    
 				    //17 Apr. 2014: Now I need to scan intervals
 				    
